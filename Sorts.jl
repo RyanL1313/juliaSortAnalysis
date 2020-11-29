@@ -12,7 +12,7 @@ Timing information is obtained from the mergesort and quicksort algorithms and i
 The constant MAX_LINES can be modified to test out the performance of sorting a certain number of lines of strings.
 =#
 
-MAX_LINES = 1000000 # Number of lines you want to read in
+MAX_LINES = 100000 # Number of lines you want to read in
 
 # Driver function
 function main()
@@ -44,14 +44,29 @@ function main()
     quickSortLinesCopy = copy(quickSortLines)
     tempCopy = copy(temp)
     mergeSort!(mergeSortLinesCopy, 1, length(mergeSortLinesCopy), tempCopy)
-    @time quickSort!(quickSortLinesCopy, 1, length(quickSortLinesCopy))
+    quickSort!(quickSortLinesCopy, 1, length(quickSortLinesCopy))
 
     # Perform the mergesort and quicksort, obtain the time and memory consumed for each sort using @time
     @time mergeSort!(mergeSortLines, 1, length(mergeSortLines), temp)
     @time quickSort!(quickSortLines, 1, length(quickSortLines))
+
+    # Write the sorted arrays to the output files specified by the user
+    writeSortedArrayToFile(msWriteFileName, mergeSortLines)
+    writeSortedArrayToFile(qsWriteFileName, quickSortLines)
+
 end
 
 
+#=
+The mergesort algorithm.
+Recursively divides the string lines array into 2 arrays, then combines these arrays in the merge step.
+
+Parameters:
+lines - the lines array
+first - index of the first element in the subarray
+last - index of the last element in the subarray
+temp - the temporary array used to hold the sorted data throughout the mergesort operation
+=#
 function mergeSort!(lines::Array, first::Int, last::Int, temp::Array)
 
     if first < last
@@ -63,6 +78,21 @@ function mergeSort!(lines::Array, first::Int, last::Int, temp::Array)
     end
 end
 
+
+#=
+The merge operation used in mergeSort.
+Merges two sorted arrays into one sorted array by taking a pointer to the left half of the array and a pointer to the right half of the array
+and comparing elements until one pointer reaches the end of its half of the array. The elements are put into the temp array as the comparisons happen.
+Then, it copies the remaining elements in the array with unread elements to the temp array. The temp array is then copied into the lines array.
+This step of mergesort takes O(n) time.
+The string comparison works by viewing the strings in their lowercase form (using strToLower()) and then comparing the strings.
+
+Parameters:
+lines - the lines array
+first - index of the first element in the subarray
+last - index of the last element in the subarray
+temp - the temporary array used to hold the sorted data throughout the mergesort operation
+=#
 function merge!(lines::Array, first::Int, last::Int, temp::Array)
     middle = floor(Int, (first + last) / 2)
     leftArrIndex = first
@@ -103,6 +133,16 @@ function merge!(lines::Array, first::Int, last::Int, temp::Array)
 end
 
 
+#=
+The quicksort algorithm.
+Creates a split point where all elements to the left of the point are less than the element at the split, while all elements to the right are greater than the element at the split.
+The element at the split point is then considered to be in its correct location. Quicksort is then recursively performed on all other elements around this split point.
+
+Parameters:
+lines - the lines array
+left - the first index in this partition of the array
+right - the last index in this partition of the array
+=#
 function quickSort!(lines::Array, left::Int, right::Int)
     if left < right
         split = hoarePartition!(lines, left, right)
@@ -112,6 +152,16 @@ function quickSort!(lines::Array, left::Int, right::Int)
 end
 
 
+#=
+The partitioning part of quicksort where a split point is identified.
+Works by putting all elements less than the pivot in the left side of the array, and all elements greater in the right side.
+The pivot element is swapped with the j index when i and j cross over, and then the j index is the split point.
+
+Paramters:
+lines - the lines array
+left - the first index in this partition of the array
+right - the last index in this partition of the array
+=#
 function hoarePartition!(lines::Array, left::Int, right::Int)
     pivot = left
 
@@ -144,5 +194,23 @@ function hoarePartition!(lines::Array, left::Int, right::Int)
     return j
 end
 
+
+#=
+Writes a sorted array to an output file.
+
+Parameters:
+
+outFileName - the output file name to write the sorted strings
+lines - the sorted array of strings
+=#
+function writeSortedArrayToFile(outFileName, lines::Array)
+    outFile = open(outFileName, "w")
+
+    for line in lines
+        println(outFile, line)
+    end
+
+    close(outFile)
+end
 
 main()
